@@ -1,5 +1,6 @@
 package com.intellisquid.dashboard.todo.ui.components
 
+import androidx.compose.runtime.saveable.SaverScope
 import com.intellisquid.dashboard.todo.data.Priority
 import com.intellisquid.dashboard.todo.data.TodoItem
 import com.intellisquid.dashboard.todo.data.TodoStatus
@@ -7,6 +8,9 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class SortableTableTest {
+
+    // Saver.save() is declared as a SaverScope extension, so tests need a stand-in scope to call it.
+    private val saverScope = SaverScope { true }
 
     private fun item(title: String, priority: Priority, createdAt: Long) = TodoItem(
         id = createdAt,
@@ -78,7 +82,7 @@ class SortableTableTest {
     @Test
     fun sortStateSaver_roundTripsThroughSaveRestore() {
         val original = SortState(TodoColumn.PRIORITY, SortDirection.DESCENDING)
-        val saved = SortStateSaver.save(original)!!
+        val saved = with(SortStateSaver) { saverScope.save(original) }!!
         val restored = SortStateSaver.restore(saved)
         assertEquals(original, restored)
     }
