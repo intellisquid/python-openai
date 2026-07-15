@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.intellisquid.dashboard.todo.data.Priority
@@ -24,30 +25,35 @@ import com.intellisquid.dashboard.todo.data.TodoItem
 import com.intellisquid.dashboard.todo.data.TodoStatus
 
 @Composable
-fun ActiveTodoRow(
+fun ActiveTodoTableRow(
     item: TodoItem,
     onToggleCompleted: (Boolean) -> Unit,
     onArchive: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val completed = item.status == TodoStatus.COMPLETED
-    Card(modifier = modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+    Row(
+        modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = item.title,
+            style = MaterialTheme.typography.bodyMedium,
+            textDecoration = if (completed) TextDecoration.LineThrough else null,
+            modifier = Modifier.weight(2f),
+        )
+        Text(
+            text = formatTimestampCompact(item.createdAt),
+            style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
+            modifier = Modifier.weight(1.6f),
+        )
+        Text(
+            text = priorityLabel(item.priority),
+            style = MaterialTheme.typography.bodyMedium,
+            modifier = Modifier.weight(1.1f),
+        )
+        Row(modifier = Modifier.weight(1.3f), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = completed, onCheckedChange = onToggleCompleted)
-            Column(modifier = Modifier.weight(1f).padding(start = 4.dp)) {
-                Text(
-                    text = item.title,
-                    style = MaterialTheme.typography.bodyLarge,
-                    textDecoration = if (completed) TextDecoration.LineThrough else null,
-                )
-                if (item.notes.isNotBlank()) {
-                    Text(text = item.notes, style = MaterialTheme.typography.bodySmall)
-                }
-                Text(text = priorityLabel(item.priority), style = MaterialTheme.typography.labelSmall)
-            }
             IconButton(onClick = onArchive) {
                 Icon(Icons.Filled.Archive, contentDescription = "Archive")
             }
