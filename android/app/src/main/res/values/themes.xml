@@ -1,0 +1,3 @@
+<resources>
+    <style name="Theme.DashboardTodo" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
