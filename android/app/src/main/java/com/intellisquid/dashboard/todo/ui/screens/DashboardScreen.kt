@@ -6,7 +6,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Divider
@@ -20,19 +21,35 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.intellisquid.dashboard.todo.data.TodoItem
 import com.intellisquid.dashboard.todo.data.TodoStatus
 import com.intellisquid.dashboard.todo.ui.DashboardViewModel
-import com.intellisquid.dashboard.todo.ui.components.ActiveTodoRow
+import com.intellisquid.dashboard.todo.ui.components.ActiveTodoTableRow
 import com.intellisquid.dashboard.todo.ui.components.AddTodoDialog
+import com.intellisquid.dashboard.todo.ui.components.SortDirection
+import com.intellisquid.dashboard.todo.ui.components.SortState
+import com.intellisquid.dashboard.todo.ui.components.SortStateSaver
+import com.intellisquid.dashboard.todo.ui.components.TodoColumn
+import com.intellisquid.dashboard.todo.ui.components.TodoTableHeader
+import com.intellisquid.dashboard.todo.ui.components.sortTodos
+import com.intellisquid.dashboard.todo.ui.components.toggleSort
 
 @Composable
 fun DashboardScreen(viewModel: DashboardViewModel, contentPadding: PaddingValues) {
     val items by viewModel.dashboardItems.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
+
+    var activeSortState by rememberSaveable(stateSaver = SortStateSaver) {
+        mutableStateOf(SortState(TodoColumn.CREATED, SortDirection.DESCENDING))
+    }
+    var completedSortState by rememberSaveable(stateSaver = SortStateSaver) {
+        mutableStateOf(SortState(TodoColumn.CREATED, SortDirection.DESCENDING))
+    }
 
     Scaffold(
         modifier = Modifier.padding(contentPadding),
@@ -56,26 +73,32 @@ fun DashboardScreen(viewModel: DashboardViewModel, contentPadding: PaddingValues
             ) {
                 if (active.isNotEmpty()) {
                     item { Text("Active", style = MaterialTheme.typography.titleLarge) }
-                    items(active, key = { it.id }) { todo ->
-                        ActiveTodoRow(
-                            item = todo,
-                            onToggleCompleted = { viewModel.setCompleted(todo, it) },
-                            onArchive = { viewModel.archive(todo) },
+                    item {
+                        TodoTableHeader(
+                            sortState = activeSortState,
+                            onSort = { column -> activeSortState = toggleSort(activeSortState, column) },
                         )
                     }
+                    todoTableRows(
+                        items = sortTodos(active, activeSortState),
+                        viewModel = viewModel,
+                    )
                 }
                 if (completed.isNotEmpty()) {
                     item {
                         Divider(modifier = Modifier.padding(vertical = 8.dp))
                         Text("Completed", style = MaterialTheme.typography.titleLarge)
                     }
-                    items(completed, key = { it.id }) { todo ->
-                        ActiveTodoRow(
-                            item = todo,
-                            onToggleCompleted = { viewModel.setCompleted(todo, it) },
-                            onArchive = { viewModel.archive(todo) },
+                    item {
+                        TodoTableHeader(
+                            sortState = completedSortState,
+                            onSort = { column -> completedSortState = toggleSort(completedSortState, column) },
                         )
                     }
+                    todoTableRows(
+                        items = sortTodos(completed, completedSortState),
+                        viewModel = viewModel,
+                    )
                 }
             }
         }
@@ -89,5 +112,21 @@ fun DashboardScreen(viewModel: DashboardViewModel, contentPadding: PaddingValues
                 showAddDialog = false
             },
         )
+    }
+}
+
+private fun LazyListScope.todoTableRows(
+    items: List<TodoItem>,
+    viewModel: DashboardViewModel,
+) {
+    itemsIndexed(items, key = { _, todo -> todo.id }) { index, todo ->
+        ActiveTodoTableRow(
+            item = todo,
+            onToggleCompleted = { viewModel.setCompleted(todo, it) },
+            onArchive = { viewModel.archive(todo) },
+        )
+        if (index < items.lastIndex) {
+            Divider()
+        }
     }
 }
