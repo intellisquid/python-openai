@@ -45,3 +45,18 @@ cd android
 
 Requires Android Studio (or the Android SDK + `ANDROID_HOME` set) with API 34 installed;
 `minSdk` is 26.
+
+## Automation
+
+**CI** — `.github/workflows/android-ci.yml` builds on every push/PR that touches `android/`:
+runs the unit tests, then assembles the debug APK, and uploads both the test report and the
+APK as downloadable workflow artifacts. No self-hosted runner or secrets needed — it uses
+`android-actions/setup-android` to install the SDK on GitHub's Ubuntu runner.
+
+**Local build + install** — with a device or emulator connected and `adb` on your `PATH`:
+
+```
+android/scripts/run_app.sh
+```
+
+This assembles the debug APK, installs it, and launches it in one step.
