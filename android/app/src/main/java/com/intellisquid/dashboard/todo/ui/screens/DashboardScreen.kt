@@ -122,6 +122,7 @@ private fun LazyListScope.todoTableRows(
     itemsIndexed(items, key = { _, todo -> todo.id }) { index, todo ->
         ActiveTodoTableRow(
             item = todo,
+            isEvenRow = index % 2 == 0,
             onToggleCompleted = { viewModel.setCompleted(todo, it) },
             onArchive = { viewModel.archive(todo) },
         )
